@@ -1,0 +1,52 @@
+name: Compare PDF and DOCX
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run comparison script
+      id: compare_script
+      run: |
+        PDF_FILE="document.pdf"
+        DOCX_FILE="document.docx"
+        python compare_pdf_docx.py $PDF_FILE $DOCX_FILE
+        SUMMARY=$(tail -n 1 compare_report.html)
+        echo "::set-output name=summary::$SUMMARY"
+
+    - name: Upload report artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: comparison-report
+        path: compare_report.html
+
+    - name: Comment on commit
+      uses: actions/github-script@v4
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          const summary = `${{ steps.compare_script.outputs.summary }}`;
+          github.repos.createCommitComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            commit_sha: context.sha,
+            body: `**Document Comparison Summary**\n\n${summary}`
+          });
