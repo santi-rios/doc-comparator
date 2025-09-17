@@ -50,3 +50,6 @@ jobs:
             commit_sha: context.sha,
             body: `**Document Comparison Summary**\n\n${summary}`
           });
+
+permissions:
+      contents: write
