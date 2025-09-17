@@ -11,10 +11,10 @@ jobs:
 
     steps:
     - name: Check out repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.x'
 
@@ -30,21 +30,21 @@ jobs:
         DOCX_FILE="document.docx"
         python compare_pdf_docx.py $PDF_FILE $DOCX_FILE
         SUMMARY=$(tail -n 1 compare_report.html)
-        echo "::set-output name=summary::$SUMMARY"
+        echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
 
     - name: Upload report artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: comparison-report
         path: compare_report.html
 
     - name: Comment on commit
-      uses: actions/github-script@v4
+      uses: actions/github-script@v7
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
           const summary = `${{ steps.compare_script.outputs.summary }}`;
-          github.repos.createCommitComment({
+          github.rest.repos.createCommitComment({
             owner: context.repo.owner,
             repo: context.repo.repo,
             commit_sha: context.sha,
